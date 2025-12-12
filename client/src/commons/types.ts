@@ -20,3 +20,13 @@ export interface StrategyConfig {
     };
     parameters: Parameter[];
 }
+
+// 3. 백테스팅 결과 데이터
+export interface BacktestResult {
+    stats: {
+        totalReturn: number;
+        winRate: number;
+        mdd: number;
+    };
+    chartData: { date: string; value: number }[];
+}

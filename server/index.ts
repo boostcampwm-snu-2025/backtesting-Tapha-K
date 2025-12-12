@@ -65,6 +65,40 @@ app.post("/api/ai/parse", (req, res) => {
     }, 1500);
 });
 
+// ✅ 3단계: 백테스팅 실행 API (Mock)
+app.post("/api/backtest/run", (req, res) => {
+    const strategy = req.body;
+
+    console.log(`[Server] 백테스팅 시작... 전략:`, strategy.market.type);
+
+    // 더미 결과 데이터 생성
+    const mockResult = {
+        stats: {
+            totalReturn: 15.4, // 수익률
+            winRate: 65.2, // 승률
+            mdd: -12.5, // 최대 낙폭
+        },
+        // 차트용 시계열 데이터 (간단하게 10개만)
+        chartData: [
+            { date: "2023-01", value: 100 },
+            { date: "2023-02", value: 102 },
+            { date: "2023-03", value: 98 },
+            { date: "2023-04", value: 105 },
+            { date: "2023-05", value: 108 },
+            { date: "2023-06", value: 115 },
+            { date: "2023-07", value: 112 },
+            { date: "2023-08", value: 120 },
+            { date: "2023-09", value: 125 },
+            { date: "2023-10", value: 130 },
+        ],
+    };
+
+    // 2초 딜레이 (계산하는 척)
+    setTimeout(() => {
+        res.json(mockResult);
+    }, 2000);
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
