@@ -1,19 +1,23 @@
-import React, { useState } from "react";
-import { Button } from "../../../components/common/Button";
-import { CollapsibleCard } from "../../../components/common/CollapsibleCard"; // 추가
+import React from "react";
+import { Button } from "../../../components/Button";
+import { CollapsibleCard } from "../../../components/CollapsibleCard";
 
-export const PeriodSection: React.FC = () => {
-    // isOpen 상태 제거 (CollapsibleCard가 알아서 함)
-    const [startDate, setStartDate] = useState("");
-    const [endDate, setEndDate] = useState("");
+interface Props {
+    data: { startDate: string; endDate: string };
+    onChange: (data: { startDate: string; endDate: string }) => void;
+}
 
+export const PeriodSection: React.FC<Props> = ({ data, onChange }) => {
+    // handlePreset 로직도 여기서 data를 업데이트하는 방식으로 변경
     const handlePreset = (months: number) => {
-        // ... (기존 로직 동일)
         const end = new Date();
         const start = new Date();
         start.setMonth(end.getMonth() - months);
-        setEndDate(end.toISOString().split("T")[0]);
-        setStartDate(start.toISOString().split("T")[0]);
+
+        onChange({
+            startDate: start.toISOString().split("T")[0],
+            endDate: end.toISOString().split("T")[0],
+        });
     };
 
     return (
@@ -22,19 +26,23 @@ export const PeriodSection: React.FC = () => {
                 <div className="flex items-center gap-2">
                     <input
                         type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="border border-slate-300 rounded px-3 py-2 w-full text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                        value={data.startDate}
+                        onChange={(e) =>
+                            onChange({ ...data, startDate: e.target.value })
+                        }
+                        className="border border-slate-300 rounded px-3 py-2 w-full text-slate-700 outline-none"
                     />
                     <span className="text-slate-400">~</span>
                     <input
                         type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="border border-slate-300 rounded px-3 py-2 w-full text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                        value={data.endDate}
+                        onChange={(e) =>
+                            onChange({ ...data, endDate: e.target.value })
+                        }
+                        className="border border-slate-300 rounded px-3 py-2 w-full text-slate-700 outline-none"
                     />
                 </div>
-
+                {/* ... 버튼 부분 기존 동일 ... */}
                 <div className="grid grid-cols-5 gap-2">
                     {[1, 3, 6, 12, 36].map((m) => (
                         <Button

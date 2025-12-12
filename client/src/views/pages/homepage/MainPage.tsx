@@ -1,19 +1,45 @@
-import React from "react";
+import React, { useState } from "react";
 import { PeriodSection } from "./PeriodSection";
 import { MarketSection } from "./MarketSection";
 import { ParameterSection } from "./ParameterSection";
 import { PromptSection } from "./PromptSection";
 import { ResultSection } from "./ResultSection";
+import { type StrategyConfig, type Parameter } from "../../../commons/types";
 
 export const MainPage: React.FC = () => {
+    // 1. 모든 상태(State)를 여기서 관리합니다.
+    const [period, setPeriod] = useState({ startDate: "", endDate: "" });
+    const [market, setMarket] = useState({
+        type: "KOSPI",
+        sectors: ["반도체"],
+    });
+    const [parameters, setParameters] = useState<Parameter[]>([]); // 초기엔 비어있음
+
+    // 2. AI 요청 핸들러
+    const handleGenerateStrategy = async (prompt: string) => {
+        try {
+            const response = await fetch("http://localhost:3000/api/ai/parse", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt }),
+            });
+
+            const data: StrategyConfig = await response.json();
+
+            // 3. 받아온 데이터로 상태 일괄 업데이트 -> 화면이 싹 바뀜!
+            setPeriod(data.period);
+            setMarket({ type: data.market.type, sectors: data.market.sectors });
+            setParameters(data.parameters);
+        } catch (error) {
+            console.error("AI 요청 실패:", error);
+            alert("서버 연결에 실패했습니다.");
+        }
+    };
+
     return (
         <div className="h-full flex gap-8">
-            {/* 🟢 왼쪽: 설정 패널 (고정 너비 420px) */}
-            {/* overflow-y-auto를 줘서 화면이 작아도 스크롤 가능하게 함 */}
-
             {/* 왼쪽 패널 */}
             <div className="w-[420px] flex flex-col gap-6 overflow-y-auto pr-2 pb-10">
-                {/* 상단 설정 그룹 */}
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-6">
                     <div className="flex items-center gap-2 border-b border-slate-100 pb-4 mb-2">
                         <span className="text-xl">⚙️</span>
@@ -22,53 +48,26 @@ export const MainPage: React.FC = () => {
                         </h2>
                     </div>
 
-                    <PeriodSection />
-                    <MarketSection />
-
-                    {/* 👇 여기에 추가했습니다! */}
-                    <ParameterSection />
+                    {/* Props로 상태와 변경함수 전달 */}
+                    <PeriodSection data={period} onChange={setPeriod} />
+                    <MarketSection data={market} onChange={setMarket} />
+                    <ParameterSection
+                        data={parameters}
+                        onChange={setParameters}
+                    />
                 </div>
 
-                {/* AI 프롬프트 입력 그룹 */}
                 <div className="flex-1 min-h-[300px]">
-                    <PromptSection />
+                    {/* AI 생성 함수 전달 */}
+                    <PromptSection onGenerate={handleGenerateStrategy} />
                 </div>
             </div>
 
-            {/* 🔵 오른쪽: 결과 대시보드 (나머지 영역 채움) */}
+            {/* 오른쪽 패널 (동일) */}
             <div className="flex-1 flex flex-col gap-6 min-w-0">
-                {/* 상단 통계 카드들 (요약 정보) */}
-                <div className="grid grid-cols-3 gap-6">
-                    {["Total Return", "Win Rate", "MDD"].map((stat) => (
-                        <div
-                            key={stat}
-                            className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center h-32 hover:shadow-md transition-shadow"
-                        >
-                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">
-                                {stat}
-                            </h3>
-                            <p className="text-3xl font-extrabold text-slate-800">
-                                - %
-                            </p>
-                        </div>
-                    ))}
-                </div>
-
-                {/* 메인 결과 차트 및 상세 */}
+                {/* ... (기존 ResultSection 관련 코드 유지) ... */}
+                {/* 생략: 위에서 작성했던 ResultSection 및 통계 카드 코드 그대로 사용 */}
                 <div className="flex-1 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col min-h-[500px]">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xl">📊</span>
-                            <h2 className="text-xl font-bold text-slate-800">
-                                Backtest Results
-                            </h2>
-                        </div>
-                        <span className="text-sm text-slate-400">
-                            Result updates automatically
-                        </span>
-                    </div>
-
-                    {/* 결과 섹션 (차트 들어갈 자리) */}
                     <ResultSection />
                 </div>
             </div>

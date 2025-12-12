@@ -1,36 +1,40 @@
 import React, { useState } from "react";
-import { Card } from "../../../components/common/Card";
-import { Button } from "../../../components/common/Button";
+import { Card } from "../../../components/Card";
+import { Button } from "../../../components/Button";
 
-export const PromptSection: React.FC = () => {
+interface Props {
+    onGenerate: (prompt: string) => Promise<void>; // 부모에게 받은 생성 함수
+}
+
+export const PromptSection: React.FC<Props> = ({ onGenerate }) => {
     const [prompt, setPrompt] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleGenerate = () => {
+    // 버튼 클릭 핸들러
+    const handleClick = async () => {
         if (!prompt.trim()) return;
 
-        setIsLoading(true);
+        setIsLoading(true); // 로딩 시작
 
-        // TODO: 나중에 실제 AI API (n8n or Python Server) 연결할 곳
-        setTimeout(() => {
-            setIsLoading(false);
-            alert(
-                `[Mock] 전략 생성 요청: "${prompt}"\n\n잠시 후 파라미터가 자동으로 채워집니다!`
-            );
-        }, 1500);
+        try {
+            await onGenerate(prompt); // 부모 함수 실행 (API 호출 대기)
+        } catch (e) {
+            console.error(e);
+            alert("전략 생성 중 오류가 발생했습니다.");
+        } finally {
+            setIsLoading(false); // 로딩 끝
+        }
     };
 
     return (
         <Card className="h-full flex flex-col p-0 overflow-hidden border-blue-200 shadow-md">
-            {/* 헤더: 다른 섹션들과 디자인 통일 (배경색 등) */}
+            {/* 헤더 */}
             <div className="bg-blue-50 p-4 border-b border-blue-100 flex items-center gap-2">
                 <span className="text-xl">🤖</span>
-                <h3 className="font-bold text-blue-800">
-                    AI Strategy Prompt (핵심 기능)
-                </h3>
+                <h3 className="font-bold text-blue-800">AI Strategy Prompt</h3>
             </div>
 
-            {/* 컨텐츠 영역 */}
+            {/* 컨텐츠 */}
             <div className="p-4 flex-1 flex flex-col gap-4">
                 <div className="flex-1 bg-white">
                     <textarea
@@ -38,6 +42,7 @@ export const PromptSection: React.FC = () => {
                         placeholder="원하는 투자 전략을 자유롭게 설명해주세요.&#13;&#10;예시:&#13;&#10;- 골든크로스 발생 시 매수하고 5% 수익 나면 팔아줘.&#13;&#10;- RSI가 30 이하일 때 분할 매수하는 전략 만들어줘."
                         value={prompt}
                         onChange={(e) => setPrompt(e.target.value)}
+                        disabled={isLoading}
                     />
                 </div>
 
@@ -45,15 +50,16 @@ export const PromptSection: React.FC = () => {
                     <span className="text-xs text-slate-400 font-medium">
                         * 구체적으로 적을수록 정확도가 올라갑니다.
                     </span>
+
                     <Button
                         variant="primary"
-                        onClick={handleGenerate}
+                        onClick={handleClick}
                         disabled={isLoading || !prompt.trim()}
-                        className="px-6"
+                        className="px-6 min-w-[140px]"
                     >
                         {isLoading ? (
                             <span className="flex items-center gap-2">
-                                {/* 로딩 스피너 (SVG) */}
+                                {/* 로딩 스피너 아이콘 */}
                                 <svg
                                     className="animate-spin h-4 w-4 text-white"
                                     xmlns="http://www.w3.org/2000/svg"
@@ -77,7 +83,7 @@ export const PromptSection: React.FC = () => {
                                 Analyzing...
                             </span>
                         ) : (
-                            "Generate Strategy ✨"
+                            "Generate ✨"
                         )}
                     </Button>
                 </div>

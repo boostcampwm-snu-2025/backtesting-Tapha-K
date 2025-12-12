@@ -1,54 +1,47 @@
-import React, { useState } from "react";
-import { CollapsibleCard } from "../../../components/common/CollapsibleCard"; // 추가
+import React from "react";
+import { CollapsibleCard } from "../../../components/CollapsibleCard";
 
-export const MarketSection: React.FC = () => {
-    // isOpen 상태 제거
-    const [selectedMarket, setSelectedMarket] = useState("KOSPI");
-    const [sectors, setSectors] = useState<string[]>(["반도체", "2차전지"]);
+interface Props {
+    data: { type: string; sectors: string[] };
+    onChange: (data: { type: string; sectors: string[] }) => void;
+}
 
+export const MarketSection: React.FC<Props> = ({ data, onChange }) => {
     const markets = ["KOSPI", "KOSDAQ", "NASDAQ", "Crypto"];
 
     return (
         <CollapsibleCard title="2. Market & Sector">
             <div className="flex flex-col gap-4">
-                {/* 시장 선택 */}
-                <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
+                <div className="flex gap-2 p-1 bg-slate-200 rounded-lg">
                     {markets.map((m) => (
                         <button
                             key={m}
-                            onClick={() => setSelectedMarket(m)}
+                            onClick={() => onChange({ ...data, type: m })}
                             className={`flex-1 py-1.5 text-sm font-bold rounded-md transition-all ${
-                                // font-medium -> font-bold로 변경
-                                selectedMarket === m
-                                    ? "bg-white text-blue-700 shadow-sm" // 텍스트 색상을 blue-600 -> 700으로 진하게
-                                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-300/50" // 기본 텍스트를 slate-500 -> 600으로 진하게
+                                data.type === m
+                                    ? "bg-white text-blue-700 shadow-sm"
+                                    : "text-slate-600 hover:text-slate-900"
                             }`}
                         >
                             {m}
                         </button>
                     ))}
                 </div>
-
-                {/* 섹터 태그 */}
+                {/* 섹터 태그 (data.sectors 표시) */}
                 <div>
                     <label className="text-xs font-bold text-slate-500 mb-2 block">
                         Target Sectors
                     </label>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                        {sectors.map((sector) => (
+                    <div className="flex flex-wrap gap-2">
+                        {data.sectors.map((sector) => (
                             <span
                                 key={sector}
-                                className="px-3 py-1 bg-blue-50 text-blue-600 text-sm rounded-full border border-blue-100 flex items-center gap-1"
+                                className="px-3 py-1 bg-blue-50 text-blue-600 text-sm rounded-full border border-blue-100"
                             >
                                 {sector}
-                                <button className="hover:text-blue-800">
-                                    ×
-                                </button>
                             </span>
                         ))}
-                        <button className="px-3 py-1 border border-dashed border-slate-300 text-slate-400 text-sm rounded-full hover:border-blue-300 hover:text-blue-500">
-                            + Add
-                        </button>
+                        {/* 추가/삭제 버튼은 데모에서 생략 */}
                     </div>
                 </div>
             </div>
