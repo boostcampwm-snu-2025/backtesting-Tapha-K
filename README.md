@@ -59,3 +59,6 @@
     - Generative Analysis: 단순한 수치 나열이 아닌, 거시 경제(Macro)와 기술적 분석이 결합된 서술형 리포트를 제공합니다.
     - Context Injection: 저장된 전략의 Config(기간, 파라미터)와 Result(수익률, MDD)를 프롬프트에 주입하여, AI가 "왜 이 전략이 이 기간에 성공/실패했는지"를 회고합니다.
     - Multi-Modal Architecture: 파싱용 AI(JSON 모드)와 분석용 AI(Text 모드) 인스턴스를 분리하여 최적의 응답 포맷을 구현했습니다.
+
+- Demo 영상(소리 포함) Youtube URL
+    - https://youtu.be/6KGUgtGzF20
