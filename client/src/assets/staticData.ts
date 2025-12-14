@@ -1,4 +1,3 @@
-// client/src/data/staticData.ts
 import { type Parameter } from "../commons/types";
 
 // 1. 시장별 섹터 데이터 (방대한 양)

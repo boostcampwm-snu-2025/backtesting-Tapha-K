@@ -1,10 +1,12 @@
-// server/index.ts
-
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { ANALYSIS_SYSTEM_PROMPT, generateAnalysisPrompt } from "./data/prompts";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import {
+    ANALYSIS_SYSTEM_PROMPT,
+    generateAnalysisPrompt,
+    PARSING_SYSTEM_PROMPT,
+} from "./data/prompts";
 import { MOCK_DATA } from "./data/mockData";
 
 dotenv.config();
@@ -12,9 +14,82 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-// Gemini 클라이언트 초기화
+// AI가 이 구조를 절대 벗어나지 않게 강제
+const strategySchema = {
+    description: "Trading strategy configuration",
+    type: SchemaType.OBJECT,
+    properties: {
+        period: {
+            type: SchemaType.OBJECT,
+            properties: {
+                startDate: {
+                    type: SchemaType.STRING,
+                    description: "YYYY-MM-DD",
+                },
+                endDate: { type: SchemaType.STRING, description: "YYYY-MM-DD" },
+            },
+            required: ["startDate", "endDate"],
+        },
+        market: {
+            type: SchemaType.OBJECT,
+            properties: {
+                type: {
+                    type: SchemaType.STRING,
+                    description: "KOSPI, KOSDAQ, NASDAQ, Crypto",
+                },
+                sectors: {
+                    type: SchemaType.ARRAY,
+                    items: {
+                        type: SchemaType.STRING,
+                        description:
+                            "Must match exact strings from the valid sector list (e.g. '반도체', 'IT')",
+                    },
+                },
+            },
+            required: ["type", "sectors"],
+        },
+        parameters: {
+            type: SchemaType.ARRAY,
+            items: {
+                type: SchemaType.OBJECT,
+                properties: {
+                    id: {
+                        type: SchemaType.STRING,
+                        description:
+                            "CRITICAL: Must be one of the pre-defined IDs (e.g., 'rsi_buy', 'ma_20') if applicable.",
+                    },
+                    category: {
+                        type: SchemaType.STRING,
+                        description:
+                            "Trend, Oscillator, Volatility, Volume, Risk",
+                    },
+                    label: { type: SchemaType.STRING },
+                    value: { type: SchemaType.NUMBER },
+                    unit: { type: SchemaType.STRING },
+                    description: { type: SchemaType.STRING },
+                },
+                required: ["id", "category", "label", "value"],
+            },
+        },
+    },
+    required: ["parameters"],
+} as const;
+
+// Gemini 설정 (Schema 적용)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+// [파싱용] JSON 모드 모델
+const parsingModel = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash",
+    generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: strategySchema as any,
+    },
+});
+
+// [분석용] 일반 텍스트 모델
+const analysisModel = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash",
+});
 
 app.use(cors());
 app.use(express.json());
@@ -22,53 +97,44 @@ app.use(express.json());
 // 0. 전략 저장소 (기존 유지)
 let savedStrategies: any[] = [];
 
-// ---------------------------------------------------------
-
-// ✅ 1. AI 파라미터 파싱 API (스마트 매칭 적용)
-app.post("/api/ai/parse", (req, res) => {
+// ✅ [API] 파라미터 파싱 (Schema 모드)
+app.post("/api/ai/parse", async (req, res) => {
     const { prompt } = req.body;
-    console.log(`[Server] AI 요청 받음: "${prompt}"`);
+    console.log(`[Server] AI 파라미터 생성 요청: "${prompt}"`);
 
-    // 1) 프롬프트에 키워드가 포함된 시나리오 찾기
-    const matchedScenario = MOCK_DATA.find((scenario) =>
-        scenario.keywords.some((keyword) => prompt.includes(keyword))
-    );
+    try {
+        // 1) 시스템 프롬프트 + 사용자 입력
+        const finalPrompt = `${PARSING_SYSTEM_PROMPT}\n\nUser Input: "${prompt}"`;
 
-    // 2) 매칭된 게 없으면 기본값(골든크로스) 반환
-    const responseData = matchedScenario
-        ? matchedScenario.config
-        : MOCK_DATA[0].config;
+        // 2) Gemini 호출 (이제 Schema에 맞춰서 JSON을 줍니다)
+        const result = await parsingModel.generateContent(finalPrompt);
+        const responseText = result.response.text();
 
-    setTimeout(() => {
-        res.json(responseData);
-    }, 1000); // 반응 속도 좀 빠르게 1초로 단축
+        console.log("[Server] Gemini 응답 완료");
+
+        // 3) JSON 파싱
+        const parsedData = JSON.parse(responseText);
+        res.json(parsedData);
+    } catch (error) {
+        console.error("Gemini Parsing Error:", error);
+        // 에러 시 Fallback
+        res.json(MOCK_DATA[0].config);
+    }
 });
 
-// ✅ 2. 백테스팅 실행 API (파라미터 기반 매칭)
+// ✅ 2. [Random Mock] 백테스팅 실행 API
 app.post("/api/backtest/run", (req, res) => {
-    const config = req.body; // 프론트에서 보낸 설정값
+    console.log(`[Server] 백테스팅 실행 요청...`);
 
-    // 설정값 안에 있는 파라미터 ID를 보고 어떤 전략인지 역추적
-    // (실제로는 계산하겠지만, Mock에서는 이렇게 매칭합니다)
-    const paramIds = config.parameters.map((p: any) => p.id);
+    // 기존에는 파라미터로 매칭했지만, 이제는 5개 중 하나 랜덤 반환
+    const randomIndex = Math.floor(Math.random() * MOCK_DATA.length);
+    const randomResult = MOCK_DATA[randomIndex].result;
 
-    const matchedScenario = MOCK_DATA.find((scenario) =>
-        // 시나리오의 파라미터 ID 중 하나라도 포함되어 있으면 해당 결과 반환
-        scenario.config.parameters.some((p: any) => paramIds.includes(p.id))
-    );
+    console.log(`[Server] 결과 반환 (Random Index: ${randomIndex})`);
 
-    const resultData = matchedScenario
-        ? matchedScenario.result
-        : MOCK_DATA[0].result;
-
-    console.log(
-        `[Server] 백테스팅 실행 (매칭된 전략: ${
-            matchedScenario?.id || "default"
-        })`
-    );
-
+    // 1.5초 딜레이 (계산하는 척)
     setTimeout(() => {
-        res.json(resultData);
+        res.json(randomResult);
     }, 1500);
 });
 
@@ -87,7 +153,7 @@ app.post("/api/ai/analyze", async (req, res) => {
         const finalPrompt = `${ANALYSIS_SYSTEM_PROMPT}\n\n${userPrompt}`;
 
         // 2. Gemini 호출
-        const aiResult = await model.generateContent(finalPrompt);
+        const aiResult = await analysisModel.generateContent(finalPrompt);
         const response = await aiResult.response;
         const text = response.text();
 

@@ -1,4 +1,64 @@
-// server/data/prompts.ts
+// 1. 프론트엔드와 동일한 데이터 (AI가 여기서만 고르게 함)
+const VALID_SECTORS = `
+[Valid Sectors by Market]
+- **KOSPI**: '반도체', '2차전지', '자동차', '바이오/제약', '인터넷/플랫폼', '게임', '조선/해운', '방산', '원자력', '철강', '화학/정유', '건설', '금융/은행', '지주사', '식음료', '유통', '통신', '엔터테인먼트', '화장품', '항공/우주'
+- **KOSDAQ**: 'AI/로봇', '메타버스', 'NFT/블록체인', '2차전지 소재', '반도체 소부장', '진단키트', '신약개발', '의료기기', '웹툰/컨텐츠', '엔터/음원', '5G/통신장비', '자율주행', '스마트팩토리', '비료/사료', '교육', '보안'
+- **NASDAQ**: 'Big Tech (MAGA)', 'Semiconductor', 'Cloud/SaaS', 'Cybersecurity', 'AI & BigData', 'E-commerce', 'Fintech', 'EV (Electric Vehicle)', 'Biotech', 'Healthcare', 'Gaming', 'Social Media', 'Clean Energy', 'Streaming', 'Metaverse', 'Space', 'Robotics', '3D Printing'
+- **Crypto**: 'Layer 1', 'Layer 2', 'DeFi', 'NFT', 'Metaverse', 'GameFi', 'Meme Coin', 'Stablecoin', 'Oracle', 'DEX', 'Privacy', 'Web3', 'Storage', 'Infrastructure', 'DAO', 'Lending', 'Bridge'
+`;
+
+const VALID_PARAMETERS = `
+[Valid Parameter Library]
+You MUST use these exact IDs. Do NOT invent new IDs.
+
+- **Trend**
+  - id: 'ma_5' (5일 이평선), id: 'ma_20' (20일 이평선), id: 'ma_60' (60일 이평선), id: 'ma_120' (120일 이평선)
+  - id: 'macd_fast', id: 'macd_slow', id: 'cci', id: 'adx'
+
+- **Oscillator**
+  - id: 'rsi' (RSI 기간 설정), id: 'rsi_buy' (매수 기준선, 보통 30), id: 'rsi_sell' (매도 기준선, 보통 70)
+  - id: 'stoch_k', id: 'stoch_d', id: 'williams'
+
+- **Volatility**
+  - id: 'bb_len' (볼린저 기간), id: 'bb_mult' (볼린저 승수)
+  - id: 'atr', id: 'keltner'
+
+- **Volume**
+  - id: 'obv', id: 'mfi', id: 'volume_ratio'
+
+- **Risk**
+  - id: 'sl' (Stop Loss/손절), id: 'tp' (Take Profit/익절)
+  - id: 'trailing', id: 'max_alloc'
+`;
+
+// 2. 파싱 시스템 프롬프트 (강력한 지시 추가)
+export const PARSING_SYSTEM_PROMPT = `
+You are a specialized AI agent that converts natural language trading strategies into a structured JSON configuration.
+
+**Goal:** Analyze the user's prompt and extract a 'StrategyConfig' object.
+
+**CRITICAL RULES (Must Follow):**
+
+1. **Market & Sectors**:
+   - Infer the Market Type (KOSPI, KOSDAQ, NASDAQ, Crypto).
+   - **SECTOR MATCHING**: You MUST select sectors ONLY from the [Valid Sectors by Market] list below.
+   - Example: If user says "Samsung Electronics", map it to "반도체" (if KOSPI).
+   - If user says "Semiconductors" in KOSPI, output "반도체" (Exact Korean string).
+
+2. **Parameters**:
+   - **ID MATCHING**: You MUST use the exact 'id' from the [Valid Parameter Library] below.
+   - **Do NOT create custom IDs** like 'rsi_threshold' or 'buy_rsi'. Use 'rsi_buy' instead.
+   - If the user's intent matches a library item, use that item's ID, Category, Label, and Unit exactly.
+   - Only create a new custom ID if the user asks for a completely unsupported indicator (e.g. "Ichimoku").
+
+3. **Period (Optional)**:
+   - Only include 'period' if the user explicitly mentions dates. Otherwise, omit it.
+
+---
+${VALID_SECTORS}
+---
+${VALID_PARAMETERS}
+`;
 
 export const ANALYSIS_SYSTEM_PROMPT = `
 당신은 월스트리트 출신의 베테랑 퀀트 투자 분석가(Quant Analyst)입니다.

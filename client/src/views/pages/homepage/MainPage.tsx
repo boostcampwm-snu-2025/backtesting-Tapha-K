@@ -76,16 +76,33 @@ export const MainPage: React.FC = () => {
                 body: JSON.stringify({ prompt }),
             });
 
-            const data: StrategyConfig = await response.json();
+            // Partial<StrategyConfig> 타입을 써도 되지만, any로 처리해도 무방합니다.
+            const data = await response.json();
 
-            // 3. 받아온 데이터로 상태 일괄 업데이트
-            setPeriod(data.period);
-            setMarket({ type: data.market.type, sectors: data.market.sectors });
-            setParameters(data.parameters);
-            setResult(null); // 전략이 바뀌면 기존 결과 초기화
+            // 데이터가 존재할 때만 업데이트 (기존 값 유지)
+            if (data.period) {
+                setPeriod(data.period);
+            }
+
+            if (data.market) {
+                setMarket(data.market);
+            }
+
+            // 파라미터는 무조건 교체 (AI가 새로 짠 전략이니까)
+            if (data.parameters) {
+                const paramsWithUiId = data.parameters.map((p: any) => ({
+                    ...p,
+                    _ui_id: `ui_${Date.now()}_${Math.random()
+                        .toString(36)
+                        .substr(2, 9)}`,
+                }));
+                setParameters(paramsWithUiId);
+            }
+
+            setResult(null); // 전략이 바뀌었으니 결과 초기화
         } catch (error) {
-            console.error("AI 요청 실패:", error);
-            alert("서버 연결에 실패했습니다.");
+            console.error(error);
+            alert("AI 서버 연결 실패");
         }
     };
 

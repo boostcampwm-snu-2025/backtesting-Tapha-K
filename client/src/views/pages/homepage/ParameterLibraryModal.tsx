@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Modal } from "../../../components/Modal";
-import { PARAMETER_LIBRARY } from "../../../assets/staticData";
+import { PARAMETER_LIBRARY } from "../../../assets/staticData.ts";
 import { type Parameter } from "../../../commons/types";
 
 interface Props {

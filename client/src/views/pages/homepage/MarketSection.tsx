@@ -1,6 +1,6 @@
 import React from "react";
 import { CollapsibleCard } from "../../../components/CollapsibleCard";
-import { MARKET_SECTORS } from "../../../assets/staticData"; // 데이터 import
+import { MARKET_SECTORS } from "../../../assets/staticData.ts"; // 데이터 import
 
 interface Props {
     data: { type: string; sectors: string[] };
