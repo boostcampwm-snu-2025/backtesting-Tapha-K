@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+/* 기본 설정 */
+:root {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+        sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+
+    /* 강제로 라이트 모드 고정 (다크모드 색상 제거) */
+    color-scheme: light;
+    color: #1f2937; /* slate-800 정도의 진한 회색 */
+    background-color: #ffffff;
+
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    min-width: 320px;
+    min-height: 100vh;
+
+    /* 앱 바깥 배경색 (어두운 회색) */
+    background-color: #e5e7eb;
+
+    /* 중앙 정렬 방지 및 가로 스크롤 처리 */
+    display: block; /* 중요: flex 제거 */
+    overflow-x: auto;
+}
+
+/* 스크롤바 커스텀 */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}

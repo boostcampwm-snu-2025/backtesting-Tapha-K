@@ -28,3 +28,37 @@
         - 모호한 전략 요청에 대해서 임의로 파라미터를 정하지 않고, 사용자에게 다시 확인하는 작업을 거쳐야 함.
     - 아키텍처 통신 비용
         - csv 로그 파일의 용량이 매우 클 수 있으니, python 서버가 파일을 업로드하고 웹에서 URL을 통해 다운받을 수 있게 고려함.
+
+
+## 3주차
+- AI 기반 전략 생성
+    - Natural Language Processing: "골든크로스 발생 시 매수하고 RSI 70 이상일 때 매도해줘"와 같은 자연어 프롬프트를 입력하면 AI가 이를 분석합니다.
+    - Structured JSON Output: Gemini API의 JSON Mode를 활용하여 모호한 텍스트를 정형화된 설정값(기간, 대상 시장, 섹터, 파라미터)으로 변환합니다.
+    - Context-Aware Parsing:
+        - 사용자가 기간이나 섹터를 명시하지 않으면 기존 설정을 유지하는 Partial Update 로직 적용.
+        - KOSPI, NASDAQ 등 시장 상황에 맞는 올바른 섹터명 자동 매핑.
+
+- 동적 파라미터 관리
+    - Parameter Library: 추세(Trend), 변동성(Volatility), 모멘텀(Oscillator) 등 다양한 보조지표 라이브러리를 구축했습니다.
+    - Flexible Interaction:
+        - AI가 제안한 파라미터가 자동으로 UI에 반영됩니다.
+        - UI ID System: 동일한 지표(예: 5일 이평선, 20일 이평선)를 중복해서 사용할 수 있도록, 프론트엔드 레벨에서 고유 식별자(_ui_id)를 부여하여 독립적인 수정/삭제를 지원합니다.
+        - 라이브러리 모달을 통해 수동으로 지표를 추가하거나 삭제할 수 있습니다.
+
+- 백테스팅 시뮬레이션
+    - Mock Engine: 현재는 데모 버전으로, 사전에 정의된 10가지 시장 시나리오(급등장, 하락장, 횡보장 등) 중 랜덤한 결과를 반환하여 시각화합니다.
+    - Visualization:
+        - 일별 자산 변동 차트 시각화.
+        - 핵심 지표(수익률, 승률, MDD) 계산 및 대시보드 표시.
+
+- 전략 아카이빙
+    - CRUD Operations: 생성한 전략을 이름/설명과 함께 저장, 조회, 삭제할 수 있습니다.
+    - Detailed View: 저장된 전략 카드를 클릭하면 설정했던 파라미터와 당시의 백테스팅 결과를 모달 형태로 상세하게 조회할 수 있습니다.
+
+- AI 심층 분석 리포트
+    - Generative Analysis: 단순한 수치 나열이 아닌, 거시 경제(Macro)와 기술적 분석이 결합된 서술형 리포트를 제공합니다.
+    - Context Injection: 저장된 전략의 Config(기간, 파라미터)와 Result(수익률, MDD)를 프롬프트에 주입하여, AI가 "왜 이 전략이 이 기간에 성공/실패했는지"를 회고합니다.
+    - Multi-Modal Architecture: 파싱용 AI(JSON 모드)와 분석용 AI(Text 모드) 인스턴스를 분리하여 최적의 응답 포맷을 구현했습니다.
+
+- Demo 영상(소리 포함) Youtube URL
+    - https://youtu.be/6KGUgtGzF20

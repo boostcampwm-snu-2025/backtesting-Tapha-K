@@ -1,0 +1,8 @@
+# 비밀 변수 파일
+.env
+
+# 설치된 라이브러리
+node_modules
+
+# TypeScript 컴파일 결과물
+dist
